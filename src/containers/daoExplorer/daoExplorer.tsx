@@ -1,15 +1,6 @@
-import {
-  ButtonIcon,
-  ButtonText,
-  Dropdown,
-  IconCheckmark,
-  IconChevronDown,
-  IconFilter,
-  IconReload,
-  IconSort,
-  Spinner,
-} from '@aragon/ods-old';
 import React, {useMemo, useReducer, useState} from 'react';
+import {ButtonText, Spinner, Dropdown, ButtonIcon} from '@aragon/ods-old';
+import {Icon, IconType} from '@aragon/ods';
 import {useTranslation} from 'react-i18next';
 import styled from 'styled-components';
 import {Address} from 'viem';
@@ -176,7 +167,7 @@ export const DaoExplorer = () => {
               isActive={filtersCount !== ''}
               mode="secondary"
               size="large"
-              iconLeft={<IconFilter />}
+              iconLeft={<Icon icon={IconType.FILTER} />}
               onClick={() => {
                 setShowAdvancedFilters(true);
               }}
@@ -191,7 +182,7 @@ export const DaoExplorer = () => {
                     isActive={activeDropdown}
                     mode="secondary"
                     size="large"
-                    icon={<IconSort />}
+                    icon={<Icon icon={IconType.SORT} />}
                   />
                 }
                 onOpenChange={e => {
@@ -204,7 +195,9 @@ export const DaoExplorer = () => {
                         isActive={filters.order === 'tvl'}
                       >
                         {t('explore.sortBy.largestTreasury')}
-                        {filters.order === 'tvl' && <IconCheckmark />}
+                        {filters.order === 'tvl' && (
+                          <Icon icon={IconType.CHECKMARK} />
+                        )}
                       </CredentialsDropdownItem>
                     ),
                     callback: () => toggleOrderby('tvl'),
@@ -215,7 +208,9 @@ export const DaoExplorer = () => {
                         isActive={filters.order === 'proposals'}
                       >
                         {t('explore.sortBy.mostProposals')}
-                        {filters.order === 'proposals' && <IconCheckmark />}
+                        {filters.order === 'proposals' && (
+                          <Icon icon={IconType.CHECKMARK} />
+                        )}
                       </CredentialsDropdownItem>
                     ),
                     callback: () => toggleOrderby('proposals'),
@@ -226,7 +221,9 @@ export const DaoExplorer = () => {
                         isActive={filters.order === 'members'}
                       >
                         {t('explore.sortBy.largestCommunity')}
-                        {filters.order === 'members' && <IconCheckmark />}
+                        {filters.order === 'members' && (
+                          <Icon icon={IconType.CHECKMARK} />
+                        )}
                       </CredentialsDropdownItem>
                     ),
                     callback: () => toggleOrderby('members'),
@@ -237,7 +234,9 @@ export const DaoExplorer = () => {
                         isActive={filters.order === 'createdAt'}
                       >
                         {t('explore.sortBy.recentlyCreated')}
-                        {filters.order === 'createdAt' && <IconCheckmark />}
+                        {filters.order === 'createdAt' && (
+                          <Icon icon={IconType.CHECKMARK} />
+                        )}
                       </CredentialsDropdownItem>
                     ),
                     callback: () => toggleOrderby('createdAt'),
@@ -257,15 +256,15 @@ export const DaoExplorer = () => {
             contentWrapperClassName="lg:w-[560px]"
             secondaryButton={{
               label: t('explore.emptyStateSearch.ctaLabel'),
-              iconLeft: <IconReload />,
+              iconLeft: <Icon icon={IconType.RELOAD} />,
               onClick: handleClearFilters,
               className: 'w-full',
             }}
           />
         ) : (
           <CardsWrapper>
-            {filteredDaoList?.map(dao => (
-              <DaoCard key={dao.daoAddress} dao={dao} />
+            {filteredDaoList?.map((dao, index) => (
+              <DaoCard key={index} dao={dao} />
             ))}
             {isLoading && <Spinner size="default" />}
           </CardsWrapper>
@@ -278,7 +277,11 @@ export const DaoExplorer = () => {
               label={t('explore.explorer.showMore')}
               className="self-start"
               iconRight={
-                isFetchingNextPage ? <Spinner size="xs" /> : <IconChevronDown />
+                isFetchingNextPage ? (
+                  <Spinner size="xs" />
+                ) : (
+                  <Icon icon={IconType.CHEVRON_DOWN} />
+                )
               }
               bgWhite={true}
               mode="ghost"

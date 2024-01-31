@@ -1,12 +1,7 @@
-import {Button, Icon, IconType, Switch, Toggle, ToggleGroup} from '@aragon/ods';
-import {
-  ButtonIcon,
-  ButtonText,
-  IconClose,
-  IconReload,
-  Modal,
-} from '@aragon/ods-old';
 import React from 'react';
+import {ButtonIcon, ButtonText, Modal} from '@aragon/ods-old';
+import {Button, Icon, IconType, Switch, Toggle, ToggleGroup} from '@aragon/ods';
+
 import {useTranslation} from 'react-i18next';
 import styled from 'styled-components';
 
@@ -84,7 +79,7 @@ const Header: React.FC<HeaderProps> = ({onClose}) => {
         {t('explore.modal.filterDAOs.title')}
       </p>
       <ButtonIcon
-        icon={<IconClose />}
+        icon={<Icon icon={IconType.CLOSE} />}
         className="lg:hidden"
         mode="secondary"
         size="small"
@@ -92,7 +87,7 @@ const Header: React.FC<HeaderProps> = ({onClose}) => {
         onClick={onClose}
       />
       <ButtonIcon
-        icon={<IconClose />}
+        icon={<Icon icon={IconType.CLOSE} />}
         className="hidden lg:block"
         mode="secondary"
         size="large"
@@ -204,12 +199,12 @@ const ModalContent: React.FC<ContentProps> = ({
           {displayedChains.flatMap(f => (
             <Toggle key={f.value} label={t(f.label)} value={f.value} />
           ))}
-          <Switch
-            checked={showTestnets}
-            onCheckedChanged={toggleTestnets}
-            label={t('explore.modal.filterDAOS.label.showTesnets')}
-          />
         </ToggleGroup>
+        <Switch
+          checked={showTestnets}
+          onCheckedChanged={toggleTestnets}
+          label={t('explore.modal.filterDAOS.label.showTesnets')}
+        />
       </FilterSection>
 
       {/* Governance Filters */}
@@ -291,7 +286,7 @@ const ModalFooter: React.FC<FooterProps> = props => {
         label={t('explore.modal.filterDAOs.buttonLabel.clearFilters')}
         bgWhite
         onClick={handleClearFilters}
-        iconLeft={<IconReload />}
+        iconLeft={<Icon icon={IconType.RELOAD} />}
         className="w-full lg:w-auto"
       />
     </Footer>
