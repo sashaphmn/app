@@ -14,6 +14,7 @@ import {useFormContext, useFormState} from 'react-hook-form';
 import {useDaoDetailsQuery} from '../../hooks/useDaoDetails';
 import {
   isGaslessVotingSettings,
+  isMultisigVotingSettings,
   isTokenVotingSettings,
   useVotingSettings,
 } from '../../services/aragon-sdk/queries/use-voting-settings';
@@ -22,6 +23,7 @@ import {useDaoToken} from '../../hooks/useDaoToken';
 import {useTokenSupply} from '../../hooks/useTokenSupply';
 import {
   Action,
+  ActionsTypes,
   ActionUpdateGaslessSettings,
   ActionUpdateMetadata,
   ActionUpdateMultisigPluginSettings,
@@ -34,6 +36,7 @@ import {VotingMode} from '@aragon/sdk-client';
 import {useTranslation} from 'react-i18next';
 import {useNetwork} from '../../context/network';
 import {Loading} from '../../components/temporary';
+import {getNewMultisigMembers, getNonEmptyActions} from '../../utils/proposals';
 
 type ProposalStepperType = {
   enableTxModal: () => void;
@@ -71,7 +74,7 @@ export const ProposeSettingsStepper: React.FC<ProposalStepperType> = ({
       ]);
 
       // ignore every action that is not modifying the metadata and voting settings
-      const filteredActions = (actions as Array<Action>).filter(action => {
+      let filteredActions = (actions as Array<Action>).filter(action => {
         if (action.name === 'modify_metadata' && metadataChanged) {
           return action;
         } else if (
@@ -81,11 +84,23 @@ export const ProposeSettingsStepper: React.FC<ProposalStepperType> = ({
           settingsChanged
         ) {
           return action;
+        } else if (
+          action.name === 'add_address' ||
+          action.name === 'remove_address'
+        ) {
+          return action;
         }
       });
+
+      filteredActions = getNonEmptyActions(
+        filteredActions,
+        isMultisigVotingSettings(pluginSettings) ? pluginSettings : undefined,
+        isGaslessVotingSettings(pluginSettings) ? pluginSettings : undefined
+      );
+
       return filteredActions;
     },
-    [getValues]
+    [getValues, pluginSettings]
   );
 
   // Not a fan, but this sets the actions on the form context so that the Action
@@ -113,6 +128,7 @@ export const ProposeSettingsStepper: React.FC<ProposalStepperType> = ({
       executionExpirationDays,
       committee,
       committeeMinimumApproval,
+      actions,
     ] = getValues([
       'daoName',
       'daoSummary',
@@ -134,6 +150,7 @@ export const ProposeSettingsStepper: React.FC<ProposalStepperType> = ({
       'executionExpirationDays',
       'committee',
       'committeeMinimumApproval',
+      'actions',
     ]);
 
     let daoLogoFile = '';
@@ -154,17 +171,34 @@ export const ProposeSettingsStepper: React.FC<ProposalStepperType> = ({
       },
     };
 
+    /**
+     * Used to delete duplicate actions if you go back and forth between steps, or when editing settings again
+     * @param actions
+     * @param name
+     */
+    const actionsReduce = (actions: Action[], name: ActionsTypes) => {
+      return actions.filter(action => action.name !== name) as Action[];
+    };
+
     let settingsAction: Action;
+    let existingActions: Action[] = [];
 
     if (isGaslessVotingSettings(pluginSettings)) {
+      // Prevent add actions again if you go back and forth between steps
+      existingActions = actionsReduce(
+        actions,
+        'modify_gasless_voting_settings'
+      );
       const gaslessSettingsAction: ActionUpdateGaslessSettings = {
         name: 'modify_gasless_voting_settings',
         inputs: {
           token: daoToken,
           totalVotingWeight: tokenSupply?.raw || BigInt(0),
 
-          executionMultisigMembers: (committee as MultisigWalletField[]).map(
-            wallet => wallet.address
+          executionMultisigMembers: getNewMultisigMembers(
+            actions,
+            (committee as MultisigWalletField[]).map(wallet => wallet.address),
+            getValues
           ),
           minTallyApprovals: committeeMinimumApproval,
           minDuration: getSecondsFromDHM(
@@ -193,6 +227,11 @@ export const ProposeSettingsStepper: React.FC<ProposalStepperType> = ({
       };
       settingsAction = gaslessSettingsAction;
     } else if (isTokenVotingSettings(pluginSettings)) {
+      // Prevent add actions again if you go back and forth between steps
+      existingActions = actionsReduce(
+        existingActions,
+        'modify_token_voting_settings'
+      );
       const voteSettingsAction: ActionUpdatePluginSettings = {
         name: 'modify_token_voting_settings',
         inputs: {
@@ -222,6 +261,11 @@ export const ProposeSettingsStepper: React.FC<ProposalStepperType> = ({
       };
       settingsAction = voteSettingsAction;
     } else {
+      // Prevent add actions again if you go back and forth between steps
+      existingActions = actionsReduce(
+        existingActions,
+        'modify_multisig_voting_settings'
+      );
       const multisigSettingsAction: ActionUpdateMultisigPluginSettings = {
         name: 'modify_multisig_voting_settings',
         inputs: {
@@ -231,7 +275,12 @@ export const ProposeSettingsStepper: React.FC<ProposalStepperType> = ({
       };
       settingsAction = multisigSettingsAction;
     }
-    setValue('actions', filterActions([metadataAction, settingsAction]));
+    // Ensure that the add/remove gasless actions are before edit settings actions because it can cause errors when
+    // setting de minTallyApproval
+    setValue(
+      'actions',
+      filterActions([...existingActions, metadataAction, settingsAction])
+    );
   }, [
     getValues,
     daoDetails,

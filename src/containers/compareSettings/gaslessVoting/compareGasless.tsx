@@ -1,5 +1,5 @@
 import {Views} from '../index';
-import React from 'react';
+import React, {useMemo} from 'react';
 import {useFormContext} from 'react-hook-form';
 import {generatePath, useNavigate} from 'react-router-dom';
 import {EditSettings} from '../../../utils/paths';
@@ -12,6 +12,7 @@ import {
 } from '../../goLive/committee';
 import {GaslessPluginVotingSettings} from '@vocdoni/gasless-voting';
 import {getDHMFromSeconds} from '../../../utils/date';
+import {getNewMultisigMembers} from '../../../utils/proposals';
 
 type CompareGaslessProps = {
   daoSettings?: GaslessPluginVotingSettings;
@@ -34,17 +35,38 @@ export const CompareGasless: React.FC<CompareGaslessProps> = ({
     executionExpirationMinutes,
     executionExpirationHours,
     executionExpirationDays,
+    actions,
   } = getValues();
 
-  let displayedInfo: ReviewExecutionMultisigProps;
-  if (view === 'new') {
-    displayedInfo = {
+  const newDisplayedInfo = useMemo(() => {
+    const info: ReviewExecutionMultisigProps = {
       committee: daoSettings?.executionMultisigMembers || [],
       committeeMinimumApproval,
       executionExpirationMinutes,
       executionExpirationHours,
       executionExpirationDays,
     };
+    if (actions && actions.length > 0) {
+      info.committee = getNewMultisigMembers(
+        actions,
+        daoSettings!.executionMultisigMembers!,
+        getValues
+      );
+    }
+    return info;
+  }, [
+    actions,
+    committeeMinimumApproval,
+    daoSettings,
+    executionExpirationDays,
+    executionExpirationHours,
+    executionExpirationMinutes,
+    getValues,
+  ]);
+
+  let displayedInfo: ReviewExecutionMultisigProps;
+  if (view === 'new') {
+    displayedInfo = newDisplayedInfo;
   } else {
     const {days, hours, minutes} = getDHMFromSeconds(
       daoSettings!.minTallyDuration
