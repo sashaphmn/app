@@ -6,7 +6,6 @@ import {
   ListItemHeader,
 } from '@aragon/ods-old';
 import {Icon, IconType} from '@aragon/ods';
-import {DaoAction} from '@aragon/sdk-client-common';
 import {useTranslation} from 'react-i18next';
 import {generatePath, useNavigate} from 'react-router-dom';
 import styled from 'styled-components';
@@ -37,7 +36,6 @@ type Props = {
 
 type ProposalItemProps = CardProposalProps & {
   proposalId: string;
-  actions: DaoAction[];
 };
 
 const ProposalItem: React.FC<ProposalItemProps> = ({proposalId, ...props}) => {
