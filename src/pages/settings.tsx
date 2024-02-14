@@ -1,6 +1,6 @@
 import React, {ReactNode, useEffect, useRef, useState} from 'react';
-import {AlertInline, AvatarDao, Dropdown, Link} from '@aragon/ods-old';
-import {Button, Icon, IconType, Tag} from '@aragon/ods';
+import {AvatarDao, Dropdown, Link} from '@aragon/ods-old';
+import {AlertInline, Button, Icon, IconType, Tag} from '@aragon/ods';
 import {DaoDetails} from '@aragon/sdk-client';
 import {useTranslation} from 'react-i18next';
 import {generatePath, useNavigate, useParams} from 'react-router-dom';
@@ -112,7 +112,10 @@ export const Settings: React.FC = () => {
           >
             {t('settings.edit')}
           </Button>
-          <AlertInline label={t('settings.proposeSettingsInfo')} />
+          <AlertInline
+            message={t('settings.proposeSettingsInfo')}
+            variant="info"
+          />
         </div>
       </div>
     </SettingsWrapper>
