@@ -49,8 +49,8 @@ export const WalletInputLegacy = React.forwardRef<
       {adornmentText && (
         <Button
           size="sm"
-          variant="secondary"
-          disabled={disabled}
+          variant="tertiary"
+          state={disabled ? 'disabled' : undefined}
           onClick={onAdornmentClick}
         >
           {adornmentText}

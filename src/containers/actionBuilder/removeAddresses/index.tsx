@@ -188,7 +188,7 @@ const RemoveAddresses: React.FC<RemoveAddressesProps> = ({
             ))}
             <FormItem className="flex justify-between">
               <Button
-                variant="secondary"
+                variant="tertiary"
                 size="lg"
                 onClick={() => open('manageWallet')}
               >
@@ -202,7 +202,7 @@ const RemoveAddresses: React.FC<RemoveAddressesProps> = ({
                 trigger={
                   <Button
                     size="lg"
-                    variant="secondary"
+                    variant="tertiary"
                     iconLeft={IconType.MENU_VERTICAL}
                     data-testid="trigger"
                   />

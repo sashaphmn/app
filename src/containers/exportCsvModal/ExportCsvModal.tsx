@@ -260,7 +260,7 @@ const ExportCsvModal: React.FC<ExportCsvModalProps> = ({
                 </Button>
               ) : isCsvGenerationError ? (
                 <Button
-                  variant={isCsvGenerationLoading ? 'primary' : 'secondary'}
+                  variant="primary"
                   state={isCsvGenerationLoading ? 'loading' : undefined}
                   iconLeft={
                     isCsvGenerationLoading ? undefined : IconType.RELOAD
@@ -276,9 +276,14 @@ const ExportCsvModal: React.FC<ExportCsvModalProps> = ({
               ) : (
                 <div className="flex flex-col items-center gap-4 xl:flex-row">
                   <Button
-                    variant={isCsvGenerationLoading ? 'primary' : 'secondary'}
-                    disabled={isCsvGenerationError}
-                    state={isCsvGenerationLoading ? 'loading' : undefined}
+                    variant="primary"
+                    state={
+                      isCsvGenerationError
+                        ? 'disabled'
+                        : isCsvGenerationLoading
+                        ? 'loading'
+                        : undefined
+                    }
                     size="lg"
                     className="w-full"
                     onClick={createCsvBlob}
@@ -286,7 +291,7 @@ const ExportCsvModal: React.FC<ExportCsvModalProps> = ({
                     {t('finance.modalExport.ctaLabelGenerateCSV')}
                   </Button>
                   <Button
-                    variant="secondary"
+                    variant="tertiary"
                     size="lg"
                     className="w-full"
                     onClick={handleClose}

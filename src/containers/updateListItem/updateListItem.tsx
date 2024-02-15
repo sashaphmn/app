@@ -90,8 +90,8 @@ export const UpdateListItem: React.FC<CheckboxListItemProps> = ({
           <div className="mt-6 flex flex-col gap-y-3 md:flex-row">
             {buttonSecondaryLabel && (
               <Button
-                variant="secondary"
-                disabled={disabled}
+                variant="tertiary"
+                state={disabled ? 'disabled' : undefined}
                 size="md"
                 onClick={onClickActionSecondary}
               >
@@ -101,7 +101,7 @@ export const UpdateListItem: React.FC<CheckboxListItemProps> = ({
             {buttonPrimaryLabel && (
               <Button
                 variant="primary"
-                disabled={disabled}
+                state={disabled ? 'disabled' : undefined}
                 size="md"
                 onClick={onClickActionPrimary}
               >

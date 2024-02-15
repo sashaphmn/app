@@ -616,7 +616,7 @@ export const EditMvSettings: React.FC<EditMvSettingsProps> = ({daoDetails}) => {
                   iconLeft={IconType.APP_GOVERNANCE}
                   variant="primary"
                   size="lg"
-                  disabled={settingsUnchanged || !isValid}
+                  state={settingsUnchanged || !isValid ? 'disabled' : undefined}
                   onClick={() =>
                     navigate(
                       generatePath(ProposeNewSettings, {
@@ -632,9 +632,9 @@ export const EditMvSettings: React.FC<EditMvSettingsProps> = ({daoDetails}) => {
                 </Button>
                 <Button
                   className="w-full md:w-max"
-                  variant="secondary"
+                  variant="tertiary"
                   size="lg"
-                  disabled={settingsUnchanged}
+                  state={settingsUnchanged ? 'disabled' : undefined}
                   onClick={handleResetChanges}
                 >
                   {t('settings.resetChanges')}
