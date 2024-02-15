@@ -1,11 +1,6 @@
 import React, {useCallback} from 'react';
-import {
-  CheckboxListItem,
-  Label,
-  LinearProgress,
-  NumberInput,
-} from '@aragon/ods-old';
-import {AlertInline} from '@aragon/ods';
+import {CheckboxListItem, Label, NumberInput} from '@aragon/ods-old';
+import {Progress, AlertInline} from '@aragon/ods';
 import {Controller, useFormContext, useWatch} from 'react-hook-form';
 import {useTranslation} from 'react-i18next';
 import styled from 'styled-components';
@@ -197,7 +192,7 @@ const ConfigureCommunity: React.FC<ConfigureCommunityProps> = ({
                       />
 
                       <LinearProgressContainer>
-                        <LinearProgress max={100} value={value} />
+                        <Progress value={value} />
                         <ProgressBarTick />
                         <ProgressInfo1>
                           <p
