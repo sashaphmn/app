@@ -27,16 +27,26 @@ import {CreateProposalProvider} from 'context/createProposal';
 import {useNetwork} from 'context/network';
 import {useDaoDetailsQuery} from 'hooks/useDaoDetails';
 import {PluginTypes} from 'hooks/usePluginClient';
-import {useVotingSettings} from 'services/aragon-sdk/queries/use-voting-settings';
+import {
+  isGaslessVotingSettings,
+  useVotingSettings,
+} from 'services/aragon-sdk/queries/use-voting-settings';
 import {toDisplayEns} from 'utils/library';
 import {Community} from 'utils/paths';
 import {MintTokensFormData} from 'utils/types';
+import {useGaslessGovernanceEnabled} from '../hooks/useGaslessGovernanceEnabled';
 
 export const MintToken: React.FC = () => {
   const {data: daoDetails, isLoading} = useDaoDetailsQuery();
+  const pluginAddress = daoDetails?.plugins[0].instanceAddress as string;
+  const pluginType = daoDetails?.plugins[0].id as PluginTypes;
   const {data: votingSettings, isLoading: settingsLoading} = useVotingSettings({
-    pluginAddress: daoDetails?.plugins[0].instanceAddress as string,
-    pluginType: daoDetails?.plugins[0].id as PluginTypes,
+    pluginAddress,
+    pluginType,
+  });
+  const {isGovernanceEnabled} = useGaslessGovernanceEnabled({
+    pluginAddress,
+    pluginType,
   });
 
   const {t} = useTranslation();
@@ -73,7 +83,11 @@ export const MintToken: React.FC = () => {
     return <Loading />;
   }
 
-  if (!daoDetails || !votingSettings) {
+  if (
+    !daoDetails ||
+    !votingSettings ||
+    (isGaslessVotingSettings(votingSettings) && !isGovernanceEnabled)
+  ) {
     return null;
   }
 

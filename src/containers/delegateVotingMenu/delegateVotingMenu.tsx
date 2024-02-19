@@ -15,12 +15,14 @@ import {DelegateVotingForm} from './delegateVotingForm';
 import {DelegateVotingSuccess} from './delegateVotingSuccess';
 import {aragonSdkQueryKeys} from 'services/aragon-sdk/query-keys';
 import {useQueryClient} from '@tanstack/react-query';
-import {FormProvider, UseFormProps, useForm, useWatch} from 'react-hook-form';
+import {FormProvider, useForm, UseFormProps, useWatch} from 'react-hook-form';
 import {
   DelegateVotingFormField,
   IDelegateVotingFormValues,
 } from './delegateVotingUtils';
 import {aragonBackendQueryKeys} from 'services/aragon-backend/query-keys';
+import {PluginTypes} from '../../hooks/usePluginClient';
+import {useGaslessGovernanceEnabled} from '../../hooks/useGaslessGovernanceEnabled';
 
 const buildFormSettings = (
   delegateAddress = ''
@@ -81,9 +83,16 @@ export const DelegateVotingMenu: React.FC = () => {
     enabled: address != null && daoToken != null,
   });
 
+  const pluginType = daoDetails?.plugins[0].id as PluginTypes;
+  const {isGovernanceEnabled} = useGaslessGovernanceEnabled({
+    pluginType: daoDetails?.plugins[0].id as PluginTypes,
+    pluginAddress: daoDetails?.plugins[0].instanceAddress as string,
+  });
+
   const {data: delegateData} = useDelegatee(
     {tokenAddress: daoToken?.address as string},
-    {enabled: daoToken != null && !isOnWrongNetwork}
+    pluginType,
+    {enabled: daoToken != null && !isOnWrongNetwork && isGovernanceEnabled}
   );
 
   // The useDelegatee hook returns null when current delegate is connected address

@@ -24,6 +24,7 @@ const VerificationCard: React.FC<TransferListProps> = ({tokenAddress}) => {
     tokenTotalSupply,
     tokenTotalHolders,
     tokenType,
+    votingType,
   ] = useWatch({
     name: [
       'tokenName',
@@ -31,6 +32,7 @@ const VerificationCard: React.FC<TransferListProps> = ({tokenAddress}) => {
       'tokenTotalSupply',
       'tokenTotalHolders',
       'tokenType',
+      'votingType',
     ],
     control: control,
   });
@@ -53,6 +55,19 @@ const VerificationCard: React.FC<TransferListProps> = ({tokenAddress}) => {
   const Alert = useMemo(() => {
     switch (tokenType) {
       case 'ERC-20':
+        if (votingType === 'gasless') {
+          return (
+            <AlertCard
+              variant="success"
+              message={t(
+                'createDAO.step3.existingToken.verificationAlertSuccessTitle'
+              )}
+              description={t(
+                'createDAO.step3.existingToken.vocdoni.verificationAlertSuccessDescription'
+              )}
+            />
+          );
+        }
         return (
           <AlertCard
             variant="warning"
@@ -108,7 +123,7 @@ const VerificationCard: React.FC<TransferListProps> = ({tokenAddress}) => {
       default:
         return null;
     }
-  }, [t, tokenSymbol, tokenType]);
+  }, [t, tokenSymbol, tokenType, votingType]);
 
   const formattedTokenTotalSupply = useMemo(() => {
     if (tokenTotalSupply < 100) {

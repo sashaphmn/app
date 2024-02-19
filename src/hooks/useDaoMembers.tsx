@@ -9,6 +9,8 @@ import {useMembers} from 'services/aragon-sdk/queries/use-members';
 import {Address, useBalance} from 'wagmi';
 import {useDaoToken} from './useDaoToken';
 import {useWallet} from './useWallet';
+import {useGaslessGovernanceEnabled} from './useGaslessGovernanceEnabled';
+import {useGaslessCensusId, useNonWrappedDaoMemberBalance} from './useCensus3';
 
 export type MultisigDaoMember = {
   address: string;
@@ -122,6 +124,15 @@ export const useDaoMembers = (
   const {address} = useWallet();
   const {data: daoToken} = useDaoToken(pluginAddress);
 
+  const {isGovernanceEnabled} = useGaslessGovernanceEnabled({
+    pluginAddress,
+    pluginType,
+  });
+  const {censusId, censusSize: nonWrappedCensusSize} = useGaslessCensusId({
+    pluginType,
+    enable: !isGovernanceEnabled,
+  });
+
   const isTokenBased =
     pluginType === 'token-voting.plugin.dao.eth' ||
     pluginType === GaselessPluginName;
@@ -154,6 +165,12 @@ export const useDaoMembers = (
   const parsedSubgraphData = subgraphData.map(member =>
     sdkToDaoMember(member, daoToken?.decimals)
   );
+
+  const {members: nonGovernanceMembers} = useNonWrappedDaoMemberBalance({
+    isGovernanceEnabled,
+    subgraphMembers: parsedSubgraphData as TokenDaoMember[],
+    censusId,
+  });
 
   const {data: userBalance} = useBalance({
     address: address as Address,
@@ -195,7 +212,9 @@ export const useDaoMembers = (
   // token holders data gives us the total holders, so only need to call once
   // and return this number if countOnly === true
   if (countOnly) {
-    if (useSubgraph) {
+    if (nonWrappedCensusSize !== null) {
+      memberCount = nonWrappedCensusSize;
+    } else if (useSubgraph) {
       memberCount = parsedSubgraphData?.length || 0;
     } else {
       memberCount = graphqlData?.holders.totalHolders || 0;
@@ -246,6 +265,9 @@ export const useDaoMembers = (
           },
         ];
       } else {
+        if (!isGovernanceEnabled) {
+          return nonGovernanceMembers;
+        }
         return parsedSubgraphData;
       }
     } else {
@@ -256,9 +278,10 @@ export const useDaoMembers = (
   const sortedData = opts?.sort
     ? [...getCombinedData()].sort(sortDaoMembers(opts.sort, address))
     : getCombinedData();
-  memberCount = useSubgraph
-    ? sortedData.length
-    : graphqlData?.holders.totalHolders || sortedData.length;
+  memberCount =
+    nonWrappedCensusSize ?? useSubgraph
+      ? sortedData.length
+      : graphqlData?.holders.totalHolders ?? sortedData.length;
   const searchTerm = opts?.searchTerm;
   const filteredData = !searchTerm
     ? sortedData

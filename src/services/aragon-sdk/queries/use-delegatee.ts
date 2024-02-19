@@ -1,15 +1,20 @@
 import {UseQueryOptions, useQuery} from '@tanstack/react-query';
 import {aragonSdkQueryKeys} from '../query-keys';
 import type {IFetchDelegateeParams} from '../aragon-sdk-service.api';
-import {usePluginClient} from 'hooks/usePluginClient';
+import {
+  GaselessPluginName,
+  PluginTypes,
+  usePluginClient,
+} from 'hooks/usePluginClient';
 import {useWallet} from 'hooks/useWallet';
 import {SupportedNetworks} from 'utils/constants';
 import {TokenVotingClient} from '@aragon/sdk-client';
 import {invariant} from 'utils/invariant';
+import {GaslessVotingClient} from '@vocdoni/gasless-voting';
 
 const fetchDelegatee = async (
   params: IFetchDelegateeParams,
-  client?: TokenVotingClient
+  client?: TokenVotingClient | GaslessVotingClient
 ): Promise<string | null> => {
   invariant(client != null, 'fetchDelegatee: client is not defined');
   const data = await client.methods.getDelegatee(params.tokenAddress);
@@ -19,10 +24,16 @@ const fetchDelegatee = async (
 
 export const useDelegatee = (
   params: IFetchDelegateeParams,
+  pluginType: PluginTypes,
   options: UseQueryOptions<string | null> = {}
 ) => {
-  const client = usePluginClient('token-voting.plugin.dao.eth');
+  const client = usePluginClient(
+    pluginType === GaselessPluginName
+      ? GaselessPluginName
+      : 'token-voting.plugin.dao.eth'
+  );
   const {address, network} = useWallet();
+
   const baseParams = {
     address: address as string,
     network: network as SupportedNetworks,
@@ -45,7 +56,9 @@ export const useDelegatee = (
 
   return useQuery(
     aragonSdkQueryKeys.delegatee(baseParams, params),
-    () => fetchDelegatee(params, client),
+    () => {
+      return fetchDelegatee(params, client);
+    },
     options
   );
 };

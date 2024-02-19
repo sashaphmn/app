@@ -4936,17 +4936,17 @@
     "@babel/plugin-transform-react-jsx-source" "^7.22.5"
     react-refresh "^0.14.0"
 
-"@vocdoni/gasless-voting-ethers@0.0.1-rc1":
-  version "0.0.1-rc1"
-  resolved "https://registry.yarnpkg.com/@vocdoni/gasless-voting-ethers/-/gasless-voting-ethers-0.0.1-rc1.tgz#9958b632abce3e2e5179ecd201c41d3b03a2f047"
-  integrity sha512-lU58vpJ3AQp2u1OypsVvHgGGzCTvgtDXPLUDChn2yFHJhxc7o2Q79EwCZnD+XV9v8cN94I8AWhocbDDk1E8jMA==
+"@vocdoni/gasless-voting-ethers@0.0.1-rc2":
+  version "0.0.1-rc2"
+  resolved "https://registry.yarnpkg.com/@vocdoni/gasless-voting-ethers/-/gasless-voting-ethers-0.0.1-rc2.tgz#ce2d3f0457f2504df0f38fa2cb82c555d58512f2"
+  integrity sha512-n9MpaUwpKyykwaZnMPsm6B298AsCdSGdn8T7PTHMDVesBkKtX9z3/nDcmWyZAgk+bm8odSm0Xze6or4epb0JqA==
   dependencies:
     ethers "^5.6.2"
 
-"@vocdoni/gasless-voting@0.0.1-rc18-2":
-  version "0.0.1-rc18-2"
-  resolved "https://registry.yarnpkg.com/@vocdoni/gasless-voting/-/gasless-voting-0.0.1-rc18-2.tgz#8df6e570a5f34302b4735954f34795350866bedb"
-  integrity sha512-Wj5IDu89W3D2U9mCVbL5NkAd3e6K0q38knvUfI7BOjgkUzr26nWQNQOUw/7w/P0O3MjSHXup6XCccAj1qAPsBw==
+"@vocdoni/gasless-voting@^0.0.1-rc22-erc20-1":
+  version "0.0.1-rc22-erc20-1"
+  resolved "https://registry.yarnpkg.com/@vocdoni/gasless-voting/-/gasless-voting-0.0.1-rc22-erc20-1.tgz#9e333f3494fe77abc135083254cd7d42771a9e73"
+  integrity sha512-OxFZK6CjlFVurXx7pDOb1O+nYc2Mxerm8PWsBZBK8K3UsgSwJnHSqcVreyP9f+ngtaNS8QiSJvLLodspB80O2A==
   dependencies:
     "@aragon/osx-ethers" "1.3.0-rc0.3"
     "@aragon/sdk-client" "1.22.1"
@@ -4958,7 +4958,7 @@
     "@ethersproject/providers" "^5.7.2"
     "@ethersproject/wallet" "^5.7.0"
     "@types/big.js" "^6.1.5"
-    "@vocdoni/gasless-voting-ethers" "0.0.1-rc1"
+    "@vocdoni/gasless-voting-ethers" "0.0.1-rc2"
     "@vocdoni/sdk" "0.7.1"
     axios "0.27.2"
     graphql "^16.6.0"

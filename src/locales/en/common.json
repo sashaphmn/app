@@ -247,7 +247,9 @@
     "Arbiscan": "Arbiscan",
     "polygonscan": "Polygonscan",
     "updateExecutionMultisigAction": "Update Execution Multisig",
-    "updateExecutionMultisigActionDescription": "Change addresses that can participate in the multisig"
+    "updateExecutionMultisigActionDescription": "Change addresses that can participate in the multisig",
+    "activeMembers": "DEV - {{count}} Active members",
+    "governanceEnabled": "DEV - Governance enabled"
   },
   "placeHolders": {
     "selectToken": "Select a token …",
@@ -729,7 +731,10 @@
         "descriptionLinkURL": "https://aragon.org/how-to/import-existing-tokens",
         "verificationLabelBlockchain": "Blockchain",
         "verificationAlertCriticalBlockchainTitle": "Incorrect blockchain",
-        "verificationAlertCriticalBlockchainDescription": "This token is deployed on a different blockchain than the one you chose for your DAO. Use a token deployed on {{blockchainName}}."
+        "verificationAlertCriticalBlockchainDescription": "This token is deployed on a different blockchain than the one you chose for your DAO. Use a token deployed on {{blockchainName}}.",
+        "vocdoni": {
+          "verificationAlertSuccessDescription": "DEV - The ERC20 token selected is compatible for voting on the Vocdoni system"
+        }
       },
       "existingTokenSubtitle": "Yes, we already have a token.",
       "tokenMembership": "Token holders",
