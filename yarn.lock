@@ -48,10 +48,10 @@
     tslib "^2.3.0"
     zen-observable-ts "^1.2.0"
 
-"@aragon/ods@^1.0.14":
-  version "1.0.14"
-  resolved "https://registry.yarnpkg.com/@aragon/ods/-/ods-1.0.14.tgz#58b155dbd61fa43d9688b45f3f6d3246edc3354c"
-  integrity sha512-ZsM9gZydXeZqJ5k2qDkfsdK+Zywgn67Gd0NV28iYAQ+9nYb+niEy6y9EsYPP1PzyqKmccJK5byL8LE7weD0R6Q==
+"@aragon/ods@^1.0.15":
+  version "1.0.15"
+  resolved "https://registry.yarnpkg.com/@aragon/ods/-/ods-1.0.15.tgz#0f1e12ecae807eccd3741e36cf11fe5d8508d93c"
+  integrity sha512-ZZ1u6nkyiroXjzv9d5Z7pq2t96AubG7Mj5zBq+zaC0nfTLQhM8uSYrIoGULDTKh1omI2Qm+6hmuONG9opGAM7Q==
   dependencies:
     "@radix-ui/react-avatar" "^1.0.0"
     "@radix-ui/react-checkbox" "^1.0.0"
