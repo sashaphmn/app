@@ -27,6 +27,7 @@ import React, {
 } from 'react';
 import {useForm, useWatch} from 'react-hook-form';
 import {generatePath, useLocation, useNavigate} from 'react-router-dom';
+import {useTokenAllowance} from 'services/aragon-sdk/queries/use-token-allowance';
 import {CHAIN_METADATA} from 'utils/constants';
 import {toDisplayEns} from 'utils/library';
 import {Community} from 'utils/paths';
@@ -62,7 +63,7 @@ const GovTokensWrappingProvider: FC<{children: ReactNode}> = ({children}) => {
   const {data: daoTokenData, isLoading: isTokenDataLoading} = useDaoToken(
     daoDetails?.plugins?.[0]?.instanceAddress || ''
   );
-  const underlyingToken = (daoTokenData as Erc20WrapperTokenDetails)
+  const underlyingToken = (daoTokenData as Erc20WrapperTokenDetails | undefined)
     ?.underlyingToken;
   const [daoTokenBalance, setDaoTokenBalance] = useState('');
 
@@ -79,6 +80,20 @@ const GovTokensWrappingProvider: FC<{children: ReactNode}> = ({children}) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isTxLoading, setIsTxLoading] = useState(false);
   const [isTxError, setIsTxError] = useState(false);
+
+  const {data: tokenAllowance} = useTokenAllowance(
+    {
+      token: underlyingToken?.address as string,
+      owner: userAddress as string,
+      spender: wrappedDaoToken?.address as string,
+    },
+    {
+      enabled:
+        underlyingToken != null &&
+        userAddress != null &&
+        wrappedDaoToken != null,
+    }
+  );
 
   /* User-Input data configuration */
   const form = useForm<TokensWrappingFormData>({
@@ -374,6 +389,22 @@ const GovTokensWrappingProvider: FC<{children: ReactNode}> = ({children}) => {
     setIsTxError(false);
     form.resetField('amount');
   }, [form, mode]);
+
+  useEffect(() => {
+    if (wrappedDaoToken == null || amount === '' || tokenAllowance == null) {
+      return;
+    }
+
+    const wrapAmount = BigInt(
+      ethers.utils.parseUnits(amount, wrappedDaoToken.decimals).toString()
+    );
+
+    if (tokenAllowance.gte(wrapAmount)) {
+      setCurrentStep(2);
+    } else {
+      setCurrentStep(1);
+    }
+  }, [wrappedDaoToken, amount, tokenAllowance]);
 
   /*************************************************
    *                   Render                      *
