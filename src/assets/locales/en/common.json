@@ -1843,5 +1843,12 @@
     "error": {
       "pinMetadata": "Unable to pin data to IPFS"
     }
+  },
+  "executeTransactionDialog": {
+    "title": "Execute proposal",
+    "button": {
+      "approve": "Execute now",
+      "success": "Continue to proposal"
+    }
   }
 }

@@ -11,6 +11,16 @@ export interface IBuildCreateDaoTransactionParams {
   plugins: PluginInstallItem[];
 }
 
+export interface IBuildExecuteMultisigProposalTransactionParams {
+  client: Client;
+  proposalId: string;
+}
+
+export interface IBuildExecuteTokenVotingProposalTransactionParams {
+  client: Client;
+  proposalId: string;
+}
+
 export interface IBuildCreateMultisigProposalTransactionParams {
   client: Client;
   actions?: DaoAction[];

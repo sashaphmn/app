@@ -10,11 +10,14 @@ import {toUtf8Bytes} from 'ethers/lib/utils';
 import {zeroAddress} from 'viem';
 import {
   IBuildCreateDaoTransactionParams,
+  IBuildExecuteMultisigProposalTransactionParams,
+  IBuildExecuteTokenVotingProposalTransactionParams,
   IBuildCreateGaslessProposalTransactionParams,
   IBuildCreateMultisigProposalTransactionParams,
   IBuildCreateTokenVotingProposalTransactionParams,
 } from './transactionsService.api';
 import {ITransaction} from './domain/transaction';
+import {decodeProposalId} from '@aragon/sdk-client-common';
 import {hexToBytes} from '@aragon/sdk-client-common';
 
 class TransactionsService {
@@ -71,6 +74,20 @@ class TransactionsService {
     return transaction as ITransaction;
   };
 
+  buildExecuteMultisigProposalTransaction = async (
+    params: IBuildExecuteMultisigProposalTransactionParams
+  ): Promise<ITransaction> => {
+    const {proposalId, client} = params;
+
+    const signer = client.web3.getConnectedSigner();
+    const {pluginAddress, id} = decodeProposalId(proposalId);
+    const multisigContract = Multisig__factory.connect(pluginAddress, signer);
+
+    const transaction = await multisigContract.populateTransaction.execute(id);
+
+    return transaction as ITransaction;
+  };
+
   buildCreateMultisigProposalTransaction = async (
     params: IBuildCreateMultisigProposalTransactionParams
   ): Promise<ITransaction> => {
@@ -101,6 +118,24 @@ class TransactionsService {
         Math.round(startTimestamp / 1000),
         Math.round(endTimestamp / 1000)
       );
+
+    return transaction as ITransaction;
+  };
+
+  buildExecuteTokenVotingProposalTransaction = async (
+    params: IBuildExecuteTokenVotingProposalTransactionParams
+  ): Promise<ITransaction> => {
+    const {proposalId, client} = params;
+
+    const signer = client.web3.getConnectedSigner();
+    const {pluginAddress, id} = decodeProposalId(proposalId);
+    const tokenVotingContract = TokenVoting__factory.connect(
+      pluginAddress,
+      signer
+    );
+
+    const transaction =
+      await tokenVotingContract.populateTransaction.execute(id);
 
     return transaction as ITransaction;
   };
