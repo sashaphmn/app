@@ -6,6 +6,7 @@ import {
   MultisigProposal,
   TokenVotingClient,
   TokenVotingProposal,
+  VoteValues,
   VotingMode,
 } from '@aragon/sdk-client';
 import {DaoAction, ProposalStatus} from '@aragon/sdk-client-common';
@@ -28,7 +29,6 @@ import {
 } from 'containers/votingTerminal';
 import {useGlobalModalContext} from 'context/globalModals';
 import {useNetwork} from 'context/network';
-import {useProposalTransactionContext} from 'context/proposalTransaction';
 import {useProviders} from 'context/providers';
 import {useCache} from 'hooks/useCache';
 import {useClient} from 'hooks/useClient';
@@ -58,8 +58,6 @@ import {
   GaslessVotingClient,
   GaslessVotingProposal,
 } from '@vocdoni/gasless-voting';
-import {constants} from 'ethers';
-import {usePastVotingPower} from 'services/aragon-sdk/queries/use-past-voting-power';
 import {
   decodeAddMembersToAction,
   decodeApplyUpdateAction,
@@ -92,6 +90,7 @@ import {Action} from 'utils/types';
 import {GaslessVotingTerminal} from '../containers/votingTerminal/gaslessVotingTerminal';
 import {useGaslessHasAlreadyVote} from '../context/useGaslessVoting';
 import {UpdateVerificationCard} from 'containers/updateVerificationCard';
+import {VoteOrApprovalDialog} from 'containers/voteOrApprovalDialog/voteOrApprovalDialog';
 import {ExecuteProposalDialog} from 'containers/executeProposalDialog';
 
 export const PENDING_PROPOSAL_STATUS_INTERVAL = 1000 * 10;
@@ -135,14 +134,10 @@ export const Proposal: React.FC = () => {
   const [voteStatus, setVoteStatus] = useState('');
   const [decodedActions, setDecodedActions] =
     useState<(Action | undefined)[]>();
-
-  const {
-    handlePrepareVote,
-    handlePrepareApproval,
-    handleGaslessVoting,
-    isLoading: paramsAreLoading,
-    voteOrApprovalSubmitted,
-  } = useProposalTransactionContext();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [tryExecution, setTryExecution] = useState(false);
+  const [vote, setVote] = useState<VoteValues>();
+  const [voteOrApprovalSubmitted, setVoteOrApprovalSubmitted] = useState(false);
 
   const {
     data: proposal,
@@ -201,24 +196,6 @@ export const Proposal: React.FC = () => {
     pluginType,
     proposal?.status as string,
     isGaslessProposal(proposal) ? proposal.vochainProposalId : undefined
-  );
-
-  const shouldFetchPastVotingPower =
-    address != null &&
-    daoToken != null &&
-    proposal != null &&
-    proposal.status === ProposalStatus.ACTIVE;
-
-  const {data: pastVotingPower = constants.Zero} = usePastVotingPower(
-    {
-      address: address as string,
-      tokenAddress: daoToken?.address as string,
-      blockNumber: proposal?.creationBlockNumber as number,
-      network,
-    },
-    {
-      enabled: shouldFetchPastVotingPower,
-    }
   );
 
   const {hasAlreadyVote: gaslessAlreadyVote} = useGaslessHasAlreadyVote({
@@ -631,17 +608,11 @@ export const Proposal: React.FC = () => {
         open('network');
         statusRef.current.wasOnWrongNetwork = true;
       } else if (canVote && proposal?.id) {
-        handlePrepareApproval({tryExecution, proposalId: proposal.id});
+        setIsDialogOpen(true);
+        setTryExecution(tryExecution);
       }
     },
-    [
-      address,
-      canVote,
-      handlePrepareApproval,
-      isOnWrongNetwork,
-      open,
-      proposal?.id,
-    ]
+    [address, canVote, isOnWrongNetwork, open, proposal?.id]
   );
 
   const handleVoteClick = useCallback(() => {
@@ -725,7 +696,7 @@ export const Proposal: React.FC = () => {
   /*************************************************
    *                     Render                    *
    *************************************************/
-  const isLoading = paramsAreLoading || proposalIsLoading || detailsAreLoading;
+  const isLoading = proposalIsLoading || detailsAreLoading;
 
   if (proposalError || (proposalIsFetched && proposal == null)) {
     navigate(NotFound, {replace: true, state: {invalidProposal: proposalId}});
@@ -760,19 +731,10 @@ export const Proposal: React.FC = () => {
     votingInProcess,
     voted: voted,
     executableWithNextApproval,
-    onVoteSubmitClicked: vote =>
-      isGaslessProposal(proposal)
-        ? handleGaslessVoting({
-            vote,
-            votingPower: pastVotingPower,
-            voteTokenAddress: proposal.token?.address,
-          })
-        : handlePrepareVote({
-            vote,
-            replacement: voted || voteOrApprovalSubmitted,
-            votingPower: pastVotingPower,
-            voteTokenAddress: (proposal as TokenVotingProposal).token?.address,
-          }),
+    onVoteSubmitClicked: vote => {
+      setVote(vote);
+      setIsDialogOpen(true);
+    },
   };
 
   return (
@@ -885,6 +847,16 @@ export const Proposal: React.FC = () => {
           <WidgetStatus steps={proposalSteps} />
         </AdditionalInfoContainer>
       </ContentContainer>
+
+      <VoteOrApprovalDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        tryExecution={tryExecution}
+        vote={vote}
+        replacingVote={!!(voted || voteOrApprovalSubmitted)}
+        proposal={proposal}
+        setVoteOrApprovalSubmitted={setVoteOrApprovalSubmitted}
+      />
       <ExecuteProposalDialog
         isOpen={showExecuteDialog}
         onClose={() => setShowExecuteDialog(false)}

@@ -1,12 +1,9 @@
 import {
   ApproveMultisigProposalParams,
-  ApproveProposalStep,
   VoteProposalParams,
-  VoteProposalStep,
   VoteValues,
 } from '@aragon/sdk-client';
 import {useQueryClient} from '@tanstack/react-query';
-import {ApproveTallyStep} from '@vocdoni/gasless-voting';
 import React, {
   ReactNode,
   createContext,
@@ -21,9 +18,7 @@ import {useParams} from 'react-router-dom';
 import PublishModal, {
   TransactionStateLabels,
 } from 'containers/transactionModals/publishModal';
-import {BigNumber} from 'ethers';
 import {useDaoDetailsQuery} from 'hooks/useDaoDetails';
-import {useIsUpdateProposal} from 'hooks/useIsUpdateProposal';
 import {
   GaslessPluginName,
   PluginTypes,
@@ -40,26 +35,14 @@ import {
   aragonSdkQueryKeys,
 } from 'services/aragon-sdk/query-keys';
 import {CHAIN_METADATA, TransactionState} from 'utils/constants';
-import {toDisplayEns} from 'utils/library';
-import {executionStorage, voteStorage} from 'utils/localStorage';
+import {voteStorage} from 'utils/localStorage';
 import {ProposalId} from 'utils/types';
 import GaslessVotingModal from '../containers/transactionModals/gaslessVotingModal';
 import {GaslessVoteOrApprovalVote} from '../services/aragon-sdk/selectors';
 import {useNetwork} from './network';
-import {useProviders} from './providers';
-
-type SubmitVoteParams = {
-  vote: VoteValues;
-  votingPower: BigNumber;
-  voteTokenAddress?: string;
-  replacement?: boolean;
-};
 
 type ProposalTransactionContextType = {
   /** handles voting on proposal */
-  handlePrepareVote: (params: SubmitVoteParams) => void;
-  handlePrepareApproval: (params: ApproveMultisigProposalParams) => void;
-  handleGaslessVoting: (params: SubmitVoteParams) => void;
   handleExecutionMultisigApprove: (
     params: ApproveMultisigProposalParams
   ) => void;
@@ -85,16 +68,13 @@ const ProposalTransactionProvider: React.FC<Props> = ({children}) => {
   const {address} = useWallet();
   const {network} = useNetwork();
   const queryClient = useQueryClient();
-  const {api: provider} = useProviders();
   const fetchVotingPower = useVotingPowerAsync();
   const {data: daoDetails, isLoading} = useDaoDetailsQuery();
-  const [{data: isPluginUpdate}, {data: isProtocolUpdate}] =
-    useIsUpdateProposal(proposalId);
 
   // state values
   const [showVoteModal, setShowVoteModal] = useState(false);
   const [showGaslessModal, setShowGaslessModal] = useState(false);
-  const [voteTokenAddress, setVoteTokenAddress] = useState<string>();
+  const [voteTokenAddress] = useState<string>();
   const [showCommitteeApprovalModal, setShowCommitteeApprovalModal] =
     useState(false);
 
@@ -102,20 +82,13 @@ const ProposalTransactionProvider: React.FC<Props> = ({children}) => {
   const [approvalParams, setApprovalParams] =
     useState<ApproveMultisigProposalParams>();
 
-  const [votingPower, setVotingPower] = useState<BigNumber>(BigNumber.from(0));
-  const [replacingVote, setReplacingVote] = useState(false);
   const [voteOrApprovalSubmitted, setVoteOrApprovalSubmitted] = useState(false);
   const [voteOrApprovalProcessState, setVoteOrApprovalProcessState] =
     useState<TransactionState>();
 
-  const [executionTxHash, setExecutionTxHash] = useState<string>('');
-
-  // intermediate values
-  const daoAddressOrEns =
-    toDisplayEns(daoDetails?.ensDomain) || daoDetails?.address;
+  const [executionTxHash] = useState<string>('');
 
   const pluginType = daoDetails?.plugins[0].id as PluginTypes;
-  const pluginAddress = daoDetails?.plugins[0].instanceAddress;
   const pluginClient = usePluginClient(pluginType);
 
   const isMultisigPluginClient =
@@ -140,36 +113,6 @@ const ProposalTransactionProvider: React.FC<Props> = ({children}) => {
   /*************************************************
    *              Prepare Transactions             *
    *************************************************/
-  const handlePrepareApproval = useCallback(
-    (params: ApproveMultisigProposalParams) => {
-      setApprovalParams(params);
-      setShowVoteModal(true);
-      setVoteOrApprovalProcessState(TransactionState.WAITING);
-    },
-    []
-  );
-
-  const handlePrepareVote = useCallback(
-    (params: SubmitVoteParams) => {
-      setVotingPower(params.votingPower);
-      setReplacingVote(!!params.replacement);
-      setVoteTokenAddress(params.voteTokenAddress);
-
-      setVoteParams({proposalId, vote: params.vote});
-      setShowVoteModal(true);
-      setVoteOrApprovalProcessState(TransactionState.WAITING);
-    },
-    [proposalId]
-  );
-
-  const handleGaslessVoting = useCallback(
-    (params: SubmitVoteParams) => {
-      setVoteParams({proposalId, vote: params.vote});
-      setVoteTokenAddress(params.voteTokenAddress);
-      setShowGaslessModal(true);
-    },
-    [proposalId]
-  );
 
   const handleExecutionMultisigApprove = useCallback(
     (params: ApproveMultisigProposalParams) => {
@@ -232,126 +175,6 @@ const ProposalTransactionProvider: React.FC<Props> = ({children}) => {
     });
     queryClient.invalidateQueries({queryKey: currentProposal});
   }, [pluginType, proposalId, queryClient]);
-
-  const invalidatePluginQueries = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: ['daoDetails', daoAddressOrEns, network],
-    });
-  }, [daoAddressOrEns, network, queryClient]);
-
-  const invalidateProtocolQueries = useCallback(() => {
-    if (daoDetails?.address) {
-      queryClient.invalidateQueries({
-        queryKey: aragonSdkQueryKeys.protocolVersion(daoDetails?.address),
-      });
-    }
-  }, [daoDetails?.address, queryClient]);
-
-  const onExecutionSuccess = useCallback(
-    async (proposalId: string, txHash: string) => {
-      if (!address) return;
-
-      // get current block number
-      const executionBlockNumber = await provider.getBlockNumber();
-
-      // details to be cached
-      const executionDetails = {
-        executionBlockNumber,
-        executionDate: new Date(),
-        executionTxHash: txHash,
-      };
-
-      // add execution detail to local storage
-      executionStorage.addExecutionDetail(
-        CHAIN_METADATA[network].id,
-        proposalId.toString(),
-        executionDetails
-      );
-
-      if (isPluginUpdate) {
-        invalidatePluginQueries();
-      }
-
-      if (isProtocolUpdate) {
-        invalidateProtocolQueries();
-      }
-    },
-    [
-      address,
-      invalidatePluginQueries,
-      invalidateProtocolQueries,
-      isPluginUpdate,
-      isProtocolUpdate,
-      network,
-      provider,
-    ]
-  );
-
-  // cleans up and caches successful approval tx
-  const onApprovalSuccess = useCallback(
-    async (
-      proposalId: string,
-      executedWithApproval: boolean,
-      txHash: string
-    ) => {
-      // clean up state
-      setApprovalParams(undefined);
-      setVoteOrApprovalSubmitted(true);
-      setVoteOrApprovalProcessState(TransactionState.SUCCESS);
-
-      // cache multisig vote
-      if (address) {
-        voteStorage.addVote(
-          CHAIN_METADATA[network].id,
-          proposalId,
-          address.toLowerCase()
-        );
-      }
-
-      // executed while approving, cache execution as well
-      if (executedWithApproval) {
-        setExecutionTxHash(txHash);
-        onExecutionSuccess(proposalId, txHash);
-      }
-    },
-    [address, network, onExecutionSuccess]
-  );
-
-  // cleans up and caches successful vote
-  const onVoteSuccess = useCallback(
-    async (proposalId: string, vote: VoteValues, voteReplaced?: boolean) => {
-      // cleanup state
-      setVoteParams(undefined);
-      setReplacingVote(false);
-      setVoteOrApprovalSubmitted(true);
-      setVoteOrApprovalProcessState(TransactionState.SUCCESS);
-
-      // cache token-voting vote
-      if (address != null && voteTokenAddress != null) {
-        // fetch token user balance, ie vote weight
-        try {
-          const voteToPersist = {
-            address: address.toLowerCase(),
-            vote,
-            weight: votingPower.toBigInt(),
-            voteReplaced: !!voteReplaced,
-          };
-
-          // store in local storage
-          voteStorage.addVote(
-            CHAIN_METADATA[network].id,
-            proposalId.toString(),
-            voteToPersist
-          );
-        } catch (error) {
-          console.error(error);
-        }
-      }
-
-      setVotingPower(BigNumber.from(0));
-    },
-    [address, network, voteTokenAddress, votingPower]
-  );
 
   const onGaslessVoteOrApprovalSubmitted = useCallback(
     async (proposalId: string, vote?: VoteValues) => {
@@ -417,163 +240,23 @@ const ProposalTransactionProvider: React.FC<Props> = ({children}) => {
   /*************************************************
    *              Submit Transactions              *
    *************************************************/
-  const handleVoteOrApprovalTx = () => {
-    // tx already successful close modal
-    if (voteOrApprovalProcessState === TransactionState.SUCCESS) {
-      handleCloseVoteModal();
-      return;
-    }
-
-    if (
-      (voteParams == null && approvalParams == null) ||
-      voteOrApprovalProcessState === TransactionState.LOADING
-    ) {
-      console.log('Transaction is running');
-      return;
-    }
-
-    if (!pluginAddress) {
-      console.error('Plugin address is required');
-      return;
-    }
-
-    setVoteOrApprovalProcessState(TransactionState.LOADING);
-
-    if (pluginType === 'multisig.plugin.dao.eth' && approvalParams) {
-      handleMultisigApproval(approvalParams);
-    } else if (pluginType === GaslessPluginName && approvalParams) {
-      handleExecutionMultisigApproval(approvalParams);
-    } else if (pluginType === 'token-voting.plugin.dao.eth' && voteParams) {
-      handleTokenVotingVote(voteParams);
-    }
-  };
-
-  const handleMultisigApproval = useCallback(
-    async (params: ApproveMultisigProposalParams) => {
-      if (!isMultisigPluginClient) return;
-
-      const approveSteps = pluginClient.methods.approveProposal(params);
-
-      if (!approveSteps) {
-        throw new Error('Approval function is not initialized correctly');
-      }
-
-      setVoteOrApprovalSubmitted(false);
-
-      // tx hash is necessary for caching when approving and executing
-      // at the same time
-      let txHash = '';
-      try {
-        for await (const step of approveSteps) {
-          switch (step.key) {
-            case ApproveProposalStep.APPROVING:
-              txHash = step.txHash;
-              break;
-            case ApproveProposalStep.DONE:
-              onApprovalSuccess(params.proposalId, params.tryExecution, txHash);
-              break;
-          }
-        }
-      } catch (error) {
-        console.error(error);
-        setVoteOrApprovalProcessState(TransactionState.ERROR);
-      }
-    },
-    [isMultisigPluginClient, onApprovalSuccess, pluginClient?.methods]
-  );
-
-  // For gasless voting
-  const handleExecutionMultisigApproval = useCallback(
-    async (params: ApproveMultisigProposalParams) => {
-      if (!isGaslessVotingPluginClient) return;
-
-      const approveSteps = await pluginClient?.methods.approve(
-        params.proposalId,
-        params.tryExecution
-      );
-
-      if (!approveSteps) {
-        throw new Error('Approval function is not initialized correctly');
-      }
-
-      setVoteOrApprovalSubmitted(false);
-
-      try {
-        for await (const step of approveSteps) {
-          switch (step.key) {
-            case ApproveTallyStep.EXECUTING:
-              break;
-            case ApproveTallyStep.DONE:
-              onGaslessVoteOrApprovalSubmitted(params.proposalId);
-              break;
-          }
-        }
-      } catch (error) {
-        console.error(error);
-        setVoteOrApprovalProcessState(TransactionState.ERROR);
-      }
-    },
-    [
-      isGaslessVotingPluginClient,
-      onGaslessVoteOrApprovalSubmitted,
-      pluginClient?.methods,
-    ]
-  );
-
-  const handleTokenVotingVote = useCallback(
-    async (params: VoteProposalParams) => {
-      if (!isTokenVotingPluginClient) return;
-
-      const voteSteps = pluginClient.methods.voteProposal(params);
-      if (!voteSteps) {
-        throw new Error('Voting function is not initialized correctly');
-      }
-
-      // clear up previous submission state
-      setVoteOrApprovalSubmitted(false);
-
-      try {
-        for await (const step of voteSteps) {
-          switch (step.key) {
-            case VoteProposalStep.VOTING:
-              console.log(step.txHash);
-              break;
-            case VoteProposalStep.DONE:
-              onVoteSuccess(params.proposalId, params.vote, replacingVote);
-              break;
-          }
-        }
-      } catch (err) {
-        console.error(err);
-        setVoteOrApprovalProcessState(TransactionState.ERROR);
-      }
-    },
-    [
-      isTokenVotingPluginClient,
-      onVoteSuccess,
-      pluginClient?.methods,
-      replacingVote,
-    ]
-  );
 
   const value = useMemo(
     () => ({
-      handlePrepareVote,
-      handlePrepareApproval,
-      handleGaslessVoting,
       handleExecutionMultisigApprove,
       isLoading,
       voteOrApprovalSubmitted,
       executionTxHash,
+      approvalParams,
+      voteParams,
     }),
     [
-      handlePrepareVote,
-      handlePrepareApproval,
-      handleGaslessVoting,
       handleExecutionMultisigApprove,
       isLoading,
       voteOrApprovalSubmitted,
       executionTxHash,
+      approvalParams,
+      voteParams,
     ]
   );
 
@@ -622,7 +305,7 @@ const ProposalTransactionProvider: React.FC<Props> = ({children}) => {
         state={state}
         isOpen={isOpen}
         onClose={handleCloseVoteModal}
-        callback={handleVoteOrApprovalTx}
+        callback={() => null}
         closeOnDrag={voteOrApprovalProcessState !== TransactionState.LOADING}
         maxFee={maxFee}
         averageFee={averageFee}

@@ -2,6 +2,7 @@ import type {QueryKey} from '@tanstack/query-core';
 
 import type {
   IBuildCreateDaoTransactionParams,
+  IBuildVoteOrApprovalTransactionParams,
   IBuildExecuteMultisigProposalTransactionParams,
   IBuildExecuteTokenVotingProposalTransactionParams,
   IBuildCreateGaslessProposalTransactionParams,
@@ -11,6 +12,7 @@ import type {
 
 export enum TransactionsQueryItem {
   CREATE_DAO = 'CREATE_DAO',
+  VOTE_OR_APPROVAL = 'VOTE_OR_APPROVAL',
   CREATE_EXECUTE_MULTISIG_PROPOSAL = 'CREATE_EXECUTE_MULTISIG_PROPOSAL',
   CREATE_EXECUTE_TOKEN_VOTING_PROPOSAL = 'CREATE_EXECUTE_TOKEN_VOTING_PROPOSAL',
   CREATE_MULTISIG_PROPOSAL = 'CREATE_MULTISIG_PROPOSAL',
@@ -21,6 +23,10 @@ export enum TransactionsQueryItem {
 export const transactionsQueryKeys = {
   createDao: (params: IBuildCreateDaoTransactionParams): QueryKey => [
     TransactionsQueryItem.CREATE_DAO,
+    params,
+  ],
+  voteOrApproval: (params: IBuildVoteOrApprovalTransactionParams): QueryKey => [
+    TransactionsQueryItem.VOTE_OR_APPROVAL,
     params,
   ],
   createExecuteMultisigProposal: (

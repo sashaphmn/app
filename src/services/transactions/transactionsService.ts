@@ -2,8 +2,8 @@ import {
   DAOFactory,
   DAOFactory__factory,
   PluginRepo__factory,
-  Multisig__factory,
   TokenVoting__factory,
+  Multisig__factory,
 } from '@aragon/osx-ethers';
 import {VocdoniVoting__factory} from '@vocdoni/gasless-voting-ethers';
 import {toUtf8Bytes} from 'ethers/lib/utils';
@@ -15,10 +15,11 @@ import {
   IBuildCreateGaslessProposalTransactionParams,
   IBuildCreateMultisigProposalTransactionParams,
   IBuildCreateTokenVotingProposalTransactionParams,
+  IBuildVoteOrApprovalTransactionParams,
 } from './transactionsService.api';
 import {ITransaction} from './domain/transaction';
-import {decodeProposalId} from '@aragon/sdk-client-common';
-import {hexToBytes} from '@aragon/sdk-client-common';
+import {decodeProposalId, hexToBytes} from '@aragon/sdk-client-common';
+import {isMultisigClient, isTokenVotingClient} from 'hooks/usePluginClient';
 
 class TransactionsService {
   buildCreateDaoTransaction = async (
@@ -72,6 +73,41 @@ class TransactionsService {
     );
 
     return transaction as ITransaction;
+  };
+  buildVoteOrApprovalTransaction = async (
+    params: IBuildVoteOrApprovalTransactionParams
+  ): Promise<ITransaction> => {
+    const {pluginClient, vote, proposalId, tryExecution = false} = params;
+
+    const signer = pluginClient.web3.getConnectedSigner();
+
+    const {pluginAddress, id} = decodeProposalId(proposalId);
+
+    if (isTokenVotingClient(pluginClient)) {
+      const tokenVotingContract = TokenVoting__factory.connect(
+        pluginAddress,
+        signer
+      );
+
+      const transaction = await tokenVotingContract.populateTransaction.vote(
+        id,
+        vote,
+        false
+      );
+
+      return transaction as ITransaction;
+    } else if (isMultisigClient(pluginClient)) {
+      const multisigContract = Multisig__factory.connect(pluginAddress, signer);
+
+      const transaction = await multisigContract.populateTransaction.approve(
+        id,
+        tryExecution
+      );
+
+      return transaction as ITransaction;
+    } else {
+      throw new Error('Unsupported plugin type');
+    }
   };
 
   buildExecuteMultisigProposalTransaction = async (

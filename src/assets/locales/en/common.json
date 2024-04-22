@@ -1850,5 +1850,21 @@
       "approve": "Execute now",
       "success": "Continue to proposal"
     }
+  },
+  "voteOrApprovalDialog": {
+    "title": {
+      "vote": "Sign Vote",
+      "approval": "Approve"
+    },
+    "button": {
+      "vote": {
+        "success": "Continue to proposal",
+        "approve": "Vote now"
+      },
+      "approval": {
+        "success": "Continue to proposal",
+        "approve": "Approve proposal"
+      }
+    }
   }
 }

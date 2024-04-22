@@ -1,6 +1,7 @@
 import {Client, VoteValues} from '@aragon/sdk-client';
 import {DaoAction, PluginInstallItem} from '@aragon/sdk-client-common';
 import {TokenCensus} from '@vocdoni/sdk';
+import {PluginClient} from 'hooks/usePluginClient';
 
 export interface IBuildCreateDaoTransactionParams {
   client: Client;
@@ -11,6 +12,12 @@ export interface IBuildCreateDaoTransactionParams {
   plugins: PluginInstallItem[];
 }
 
+export interface IBuildVoteOrApprovalTransactionParams {
+  pluginClient: PluginClient;
+  vote: VoteValues;
+  proposalId: string;
+  tryExecution?: boolean;
+}
 export interface IBuildExecuteMultisigProposalTransactionParams {
   client: Client;
   proposalId: string;
