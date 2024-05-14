@@ -1,18 +1,48 @@
-import {IAddDataProps, IPinDataProps} from './ipfsService.api';
+import {resolveIpfsCid} from '@aragon/sdk-client-common';
+import {IPinDataProps} from './ipfsService.api';
+import {pinataAPI} from 'utils/constants';
 
 class IpfsService {
-  addData = async ({client, data}: IAddDataProps) => {
-    const processedData = await this.processData(data);
+  constructor(
+    private gateway: string = import.meta.env.VITE_PINATA_GATEWAY,
+    private apiKey: string = import.meta.env.VITE_PINATA_JWT_API_KEY,
+    private CIDVersion: string = import.meta.env.VITE_PINATA_CID_VERSION
+  ) {}
 
-    return await client.ipfs.add(processedData);
+  getData = async (cid: string) => {
+    const resolvedCid = cid.startsWith('ipfs') ? resolveIpfsCid(cid) : cid;
+
+    const response = await fetch(`${this.gateway}/${resolvedCid}`, {
+      method: 'GET',
+    });
+
+    const data = await response.json();
+
+    return typeof data === 'string' ? JSON.parse(data) : data;
   };
 
-  pinData = async ({client, cid}: IPinDataProps) => {
-    await client.ipfs.pin(cid);
+  pinData = async (data: IPinDataProps) => {
+    const processedData = await this.processData(data);
+
+    const res = await fetch(pinataAPI, {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + this.apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        pinataOptions: {
+          cidVersion: this.CIDVersion,
+        },
+        pinataContent: processedData,
+      }),
+    });
+
+    return res.json();
   };
 
   private processData = async (
-    data: IAddDataProps['data']
+    data: IPinDataProps
   ): Promise<string | Uint8Array> => {
     let processedData: string | Uint8Array;
 
