@@ -512,8 +512,13 @@ export function getLiveProposalTerminalProps(
 
     // voters
     voters =
-      proposal.voters?.map(voter => {
-        return {wallet: voter, src: voter} as VoterType;
+      proposal.votes?.map(voter => {
+        return {
+          wallet: voter.src,
+          src: voter.src,
+          option: voter.option,
+          votingPower: voter.weight.toString(),
+        } as VoterType;
       }) ?? [];
 
     // results
