@@ -861,6 +861,8 @@ export const translateToAppNetwork = (
       return 'polygon';
     case SdkSupportedNetworks.SEPOLIA:
       return 'sepolia';
+    case SdkSupportedNetworks.ZKSYNC_SEPOLIA:
+      return 'zksyncSepolia';
     default:
       return 'unsupported';
   }
@@ -897,6 +899,8 @@ export function translateToNetworkishName(
       return SdkSupportedNetworks.POLYGON;
     case 'sepolia':
       return SdkSupportedNetworks.SEPOLIA;
+    case 'zksyncSepolia':
+      return SdkSupportedNetworks.ZKSYNC_SEPOLIA;
   }
 
   return 'unsupported';
@@ -1313,8 +1317,8 @@ export function getPluginRepoAddress(
   ) {
     return pluginType === 'multisig.plugin.dao.eth'
       ? getNetworkDeployments(translatedNetwork)[version]?.MultisigRepoProxy
-          .address
+          ?.address
       : getNetworkDeployments(translatedNetwork)[version]?.TokenVotingRepoProxy
-          .address;
+          ?.address;
   }
 }

@@ -117,7 +117,8 @@ export const Dashboard: React.FC = () => {
     }
   );
 
-  const isPendingDao = pendingDao || !(census3Token?.status.synced ?? false);
+  const isPendingDao =
+    pendingDao || (isGasless && !(census3Token?.status.synced ?? false));
 
   const isLoading = liveDaoLoading || pendingDaoLoading || followedDaosLoading;
 
@@ -167,8 +168,7 @@ export const Dashboard: React.FC = () => {
       isPendingDao &&
       liveDao &&
       daoCreationState === DaoCreationState.ASSEMBLING_DAO &&
-      isGasless &&
-      census3Token?.status.synced
+      (!isGasless || census3Token?.status.synced === true)
     ) {
       setPollInterval(0);
       setDaoCreationState(DaoCreationState.DAO_READY);
