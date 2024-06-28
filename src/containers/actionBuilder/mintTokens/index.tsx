@@ -88,6 +88,11 @@ const MintTokens: React.FC<MintTokensProps> = ({
     return result;
   })();
 
+  const explorerPath =
+    network === 'zksyncMainnet' || network === 'zksyncSepolia'
+      ? 'address/'
+      : 'token/';
+
   return (
     <AccordionMethod
       type="action-builder"
@@ -96,7 +101,7 @@ const MintTokens: React.FC<MintTokensProps> = ({
       smartContractAddress={daoToken?.address}
       blockExplorerLink={
         daoToken?.address
-          ? `${CHAIN_METADATA[network].explorer}token/${daoToken?.address}`
+          ? `${CHAIN_METADATA[network].explorer}${explorerPath}${daoToken?.address}`
           : undefined
       }
       verified

@@ -89,6 +89,11 @@ export const MintTokenCard: React.FC<{
     [network]
   );
 
+  const explorerTokenPath =
+    network === 'zksyncMainnet' || network === 'zksyncSepolia'
+      ? 'address/'
+      : 'token/';
+
   /*************************************************
    *                     Render                    *
    *************************************************/
@@ -100,7 +105,7 @@ export const MintTokenCard: React.FC<{
       smartContractAddress={daoToken?.address}
       blockExplorerLink={
         daoToken?.address
-          ? `${CHAIN_METADATA[network].explorer}token/${daoToken?.address}`
+          ? `${CHAIN_METADATA[network].explorer}${explorerTokenPath}${daoToken?.address}`
           : undefined
       }
       verified
@@ -167,12 +172,13 @@ export const MintTokenCard: React.FC<{
               </p>
             </HStack>
           )}
-          {/* TODO add total amount of token holders here. */}
-          <Link
-            label={t('labels.seeAllHolders')}
-            href={`${CHAIN_METADATA[network].explorer}/token/tokenholderchart/${action.summary.daoTokenAddress}`}
-            iconRight={IconType.LINK_EXTERNAL}
-          />
+          {network !== 'zksyncMainnet' && network !== 'zksyncSepolia' && (
+            <Link
+              label={t('labels.seeAllHolders')}
+              href={`${CHAIN_METADATA[network].explorer}/token/tokenholderchart/${action.summary.daoTokenAddress}`}
+              iconRight={IconType.LINK_EXTERNAL}
+            />
+          )}
         </SummaryContainer>
       </Container>
     </AccordionMethod>

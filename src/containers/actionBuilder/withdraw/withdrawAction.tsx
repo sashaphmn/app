@@ -80,6 +80,11 @@ const WithdrawAction: React.FC<WithdrawActionProps> = ({
     return result;
   })();
 
+  const explorerPath =
+    network === 'zksyncMainnet' || network === 'zksyncSepolia'
+      ? 'address/'
+      : 'token/';
+
   return (
     <AccordionMethod
       verified
@@ -90,7 +95,7 @@ const WithdrawAction: React.FC<WithdrawActionProps> = ({
       smartContractAddress={tokenAddress}
       blockExplorerLink={
         tokenAddress
-          ? `${CHAIN_METADATA[network].explorer}token/${tokenAddress}`
+          ? `${CHAIN_METADATA[network].explorer}${explorerPath}${tokenAddress}`
           : undefined
       }
       methodDescription={t('AddActionModal.withdrawAssetsActionSubtitle')}
