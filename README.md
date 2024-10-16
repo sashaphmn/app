@@ -108,4 +108,4 @@ Join our [Developer Community](https://aragonproject.typeform.com/to/LngekEhU) t
 
 ## License
 
-[GPL-V3](https://github.com/aragon/app/blob/develop/LICENSE.txt)
+[GPL-V3](./LICENSE.txt)
